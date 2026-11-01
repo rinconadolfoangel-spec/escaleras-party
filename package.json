@@ -1,0 +1,7 @@
+{
+  "name": "escaleras-party",
+  "version": "0.1.0",
+  "description": "Serpientes y escaleras con minijuegos al estilo party game, para LAN y online (sin dependencias)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" }
+}

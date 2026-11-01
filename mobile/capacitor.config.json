@@ -1,0 +1,13 @@
+{
+  "appId": "com.escalerasparty.app",
+  "appName": "Escaleras Party",
+  "webDir": "www",
+  "backgroundColor": "#1b1340",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

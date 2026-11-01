@@ -1,0 +1,17 @@
+{
+  "name": "Escaleras Party",
+  "short_name": "Escaleras",
+  "description": "Serpientes y escaleras con minijuegos para jugar con amigos",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1b1340",
+  "theme_color": "#1b1340",
+  "lang": "es",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

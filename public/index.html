@@ -1,0 +1,1122 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Escaleras Party</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1b1340">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Escaleras">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg1:#1b1340; --bg2:#3a1c71; --card:#2a1f5c; --card2:#352876; --ink:#fff; --muted:#bdb2f0;
+    --accent:#ffd23f; --accent2:#ff6b9a; --good:#3ddc97;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--ink);overscroll-behavior:none}
+  body{background:linear-gradient(160deg,var(--bg1),var(--bg2));min-height:100vh;padding:12px}
+  h1{margin:0;font-size:clamp(28px,6vw,46px);letter-spacing:1px;text-shadow:0 3px 0 #0006}
+  h1 span{color:var(--accent)}
+  h2{margin:0 0 8px}
+  .hidden{display:none!important}
+  .wrap{max-width:1100px;margin:0 auto}
+  .card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 6px 0 #0004}
+  .center{text-align:center}
+  .menu{max-width:440px;margin:4vh auto 0;display:flex;flex-direction:column;gap:14px}
+  input[type=text],input[type=number]{
+    width:100%;padding:12px 14px;border-radius:12px;border:3px solid #5a48b5;background:#1b1340;color:#fff;
+    font-size:18px;font-family:inherit;outline:none}
+  input:focus{border-color:var(--accent)}
+  .btn{
+    border:0;border-radius:14px;padding:13px 18px;font-size:18px;font-weight:700;font-family:inherit;cursor:pointer;
+    background:var(--accent);color:#2b1b00;box-shadow:0 5px 0 #b38f00;transition:transform .05s}
+  .btn:active{transform:translateY(4px);box-shadow:0 1px 0 #b38f00}
+  .btn.pink{background:var(--accent2);color:#fff;box-shadow:0 5px 0 #b3335f}
+  .btn.pink:active{box-shadow:0 1px 0 #b3335f}
+  .btn.ghost{background:var(--card2);color:#fff;box-shadow:0 5px 0 #1a1240}
+  .btn.ghost:active{box-shadow:0 1px 0 #1a1240}
+  .btn.small{padding:8px 14px;font-size:15px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+  .muted{color:var(--muted)}
+  .code{font-size:clamp(42px,12vw,72px);letter-spacing:10px;font-weight:900;color:var(--accent);margin:6px 0}
+  .plist{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+  .pl{display:flex;align-items:center;gap:10px;background:var(--card2);padding:9px 12px;border-radius:12px;border:3px solid transparent}
+  .pl.turn{border-color:var(--accent);background:#4a3a99}
+  .pl.off{opacity:.45}
+  .dot{width:22px;height:22px;border-radius:50%;border:3px solid #fff;flex:none}
+  .pl .nm{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pl .ps{font-size:14px;color:var(--muted)}
+  .lan{background:#1b1340;border-radius:12px;padding:10px 12px;font-size:15px;word-break:break-all}
+  .lan b{color:var(--accent)}
+
+  /* tablero */
+  .game{display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start}
+  @media(max-width:860px){.game{grid-template-columns:1fr}}
+  .boardbox{background:#150f35;border-radius:18px;padding:8px;box-shadow:0 6px 0 #0004}
+  #board{width:100%;height:auto;display:block}
+  #board .cn{font-size:20px;font-weight:800;fill:#6b4db5;font-family:inherit;stroke:#fff;stroke-width:5px;paint-order:stroke;stroke-linejoin:round}
+  #board .big{font-size:34px;text-anchor:middle}
+  #board .sm{font-size:13px;font-weight:800;fill:#6b4db5;stroke:#fff;stroke-width:4px;paint-order:stroke}
+  .tok{transition:transform .55s cubic-bezier(.4,1.4,.5,1)}
+  .tok .tt{font-size:15px;font-weight:900;fill:#fff;font-family:inherit}
+  .side{display:flex;flex-direction:column;gap:12px}
+  .die{font-size:84px;line-height:1;text-align:center;min-height:90px;user-select:none}
+  .die.shake{animation:sh .12s infinite}
+  @keyframes sh{0%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}100%{transform:rotate(-8deg)}}
+  .log{font-size:16px;text-align:center;min-height:46px;color:var(--accent)}
+  .round{font-size:14px;color:var(--muted);text-align:center}
+
+  /* overlays */
+  .overlay{position:fixed;inset:0;background:#0b0620ee;z-index:50;display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto}
+  .mgbox{background:var(--card);border-radius:22px;padding:18px;width:100%;max-width:420px;text-align:center;box-shadow:0 8px 0 #0006}
+  #mgCount{font-size:22px;font-weight:800;color:var(--accent);min-height:30px;margin:6px 0}
+  #mgArea{min-height:120px;display:flex;flex-direction:column;align-items:center;gap:10px;margin:8px 0}
+  #mgFoot{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;min-height:10px}
+  .bigbtn{width:100%;padding:34px 10px;font-size:34px;font-weight:900;border:0;border-radius:22px;
+    background:var(--accent2);color:#fff;box-shadow:0 8px 0 #b3335f;touch-action:manipulation;user-select:none;font-family:inherit}
+  .bigbtn:active{transform:translateY(6px);box-shadow:0 2px 0 #b3335f}
+  .bignum{font-size:56px;font-weight:900}
+  .pad{width:100%;height:230px;border-radius:22px;display:flex;align-items:center;justify-content:center;
+    font-size:28px;font-weight:900;touch-action:manipulation;user-select:none;text-align:center;padding:10px}
+  .pad.red{background:#c0392b}.pad.green{background:#27ae60}.pad.done{background:#5a48b5}
+  canvas{border-radius:16px;max-width:100%;touch-action:none;background:#1b1340}
+  .info{font-size:20px;font-weight:700}
+  .q{font-size:46px;font-weight:900;margin:6px 0}
+  .simon{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+  .sb{height:110px;border:0;border-radius:20px;opacity:.55;touch-action:manipulation;transition:opacity .08s,transform .08s}
+  .sb.lit{opacity:1;transform:scale(1.05);box-shadow:0 0 28px #fff9}
+  .rank{display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:12px;padding:10px 12px;margin:6px 0;text-align:left}
+  .rank .m{font-size:26px}
+  .rank .nm{flex:1;font-weight:800}
+  .rank .sc{font-size:14px;color:var(--muted)}
+  .rank .bn{font-weight:900;color:var(--good)}
+
+  /* salon */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-top:14px}
+  .gc{background:var(--card2);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px;box-shadow:0 5px 0 #1a1240}
+  .gc .em{font-size:44px}
+  .gc .t{font-weight:800;font-size:19px}
+  .gc .d{font-size:14px;color:var(--muted);flex:1}
+  .gc .b{font-size:13px;color:var(--accent)}
+  /* ---------- Tablero 3D (CSS) ---------- */
+  :root{--tilt:38deg}
+  body.flat{--tilt:0deg}
+  .stage{container-type:inline-size;perspective:1100px;perspective-origin:50% 25%}
+  body.flat .plane{margin-top:0}
+  .plane{position:relative;margin-top:-3cqw;transform-style:preserve-3d;transform:rotateX(var(--tilt));transform-origin:50% 100%;transition:transform .5s}
+  .plane::before{content:'';position:absolute;inset:-5px;border-radius:14px;background:#0a0620;transform:translateZ(-22px);box-shadow:0 0 30px 8px #000b}
+  #tk3d{position:absolute;inset:0;transform-style:preserve-3d;transform:translateZ(2px);pointer-events:none}
+  .tk{position:absolute;width:0;height:0;transform-style:preserve-3d;--s:4.4cqw;
+    transition:left .55s cubic-bezier(.4,1.2,.5,1),top .55s cubic-bezier(.4,1.2,.5,1)}
+  .tk .ring{position:absolute;left:0;top:0;width:8cqw;height:8cqw;margin:-4cqw 0 0 -4cqw;border-radius:50%;background:var(--pc);opacity:.6;box-shadow:0 0 0 .5cqw #fffa}
+  .tk .stand{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;transform:rotateX(calc(var(--tilt) * -1));transform-origin:0 0;transition:transform .5s}
+  .tk .bob{position:absolute;left:0;bottom:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;transform-style:preserve-3d;animation:idle 1.8s ease-in-out infinite}
+  .tk.hop .bob{animation:hop .55s}
+  @keyframes idle{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-.6cqw)}}
+  @keyframes hop{0%{transform:translateX(-50%) translateY(0)}40%{transform:translateX(-50%) translateY(-4cqw)}100%{transform:translateX(-50%) translateY(0)}}
+  .tag{font-size:1.9cqw;font-weight:800;background:var(--pc);color:#fff;border-radius:99px;padding:.2cqw 1.2cqw;margin-bottom:.6cqw;white-space:nowrap;text-shadow:0 1px 2px #0008;border:1px solid #fff8}
+  /* personajes */
+  .em{font-size:calc(var(--s)*1.1);line-height:1}
+  .spr{width:var(--s);height:calc(var(--s)*1.1667);image-rendering:pixelated;display:block;filter:drop-shadow(0 0 .8cqw var(--aura,transparent))}
+  .char3{position:relative;width:var(--s);height:calc(var(--s)*1.8);transform-style:preserve-3d;animation:sway 3.2s ease-in-out infinite alternate}
+  @keyframes sway{from{transform:rotateY(-28deg)}to{transform:rotateY(28deg)}}
+  .c3{position:absolute;width:var(--w);height:var(--w);transform-style:preserve-3d}
+  .c3 .f{position:absolute;inset:0;image-rendering:pixelated;background-size:100% 100%;backface-visibility:hidden}
+  .c3 .fr{transform:translateZ(calc(var(--w)/2))}
+  .c3 .bk{transform:rotateY(180deg) translateZ(calc(var(--w)/2));filter:brightness(.7)}
+  .c3 .lf{transform:rotateY(-90deg) translateZ(calc(var(--w)/2));filter:brightness(.8)}
+  .c3 .rg{transform:rotateY(90deg) translateZ(calc(var(--w)/2));filter:brightness(.8)}
+  .c3 .tp{transform:rotateX(90deg) translateZ(calc(var(--w)/2));filter:brightness(1.15)}
+  .c3 .bt{transform:rotateX(-90deg) translateZ(calc(var(--w)/2));filter:brightness(.55)}
+  /* ---------- Animaciones de caminar ---------- */
+  .tk.walking{transition:left .3s linear,top .3s linear}
+  .tk.slide{transition:left .9s ease-in-out,top .9s ease-in-out}
+  .tk.walking .bob{animation:stepbob .3s ease-in-out infinite}
+  @keyframes stepbob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-1.3cqw)}}
+  .fig{transform-style:preserve-3d;transition:transform .25s}
+  .tk[data-dir="-1"] .fig.flip{transform:scaleX(-1)}
+  .tk[data-dir="1"] .fig.yaw{transform:rotateY(32deg)}
+  .tk[data-dir="-1"] .fig.yaw{transform:rotateY(-32deg)}
+  .wad{transform-style:preserve-3d;transform-origin:50% 100%}
+  :is(.tk.walking,.pv:hover) .wad{animation:waddle .6s ease-in-out infinite}
+  @keyframes waddle{0%,100%{transform:rotateZ(-7deg)}50%{transform:rotateZ(7deg)}}
+  :is(.tk.walking,.pv:hover) .char3{animation:none}
+  .sprw{position:relative}
+  .sprw .s2{position:absolute;left:0;top:0;opacity:0}
+  :is(.tk.walking,.pv:hover) .s1{animation:legs1 .3s steps(1) infinite}
+  :is(.tk.walking,.pv:hover) .s2{animation:legs2 .3s steps(1) infinite}
+  @keyframes legs1{0%{opacity:1}50%{opacity:0}}
+  @keyframes legs2{0%{opacity:0}50%{opacity:1}}
+  /* ---------- Humanoides de bloques (cabeza, cuerpo, brazos y piernas) ---------- */
+  .lmb{--u:calc(var(--s)*.07);width:calc(var(--u)*16);height:calc(var(--u)*32)}
+  .bx{position:absolute;width:var(--w);height:var(--h);transform-style:preserve-3d}
+  .bx .f{position:absolute;image-rendering:pixelated;background-size:100% 100%;backface-visibility:hidden}
+  .bx .fr{left:0;top:0;width:var(--w);height:var(--h);transform:translateZ(calc(var(--d)/2))}
+  .bx .bk{left:0;top:0;width:var(--w);height:var(--h);transform:rotateY(180deg) translateZ(calc(var(--d)/2));filter:brightness(.7)}
+  .bx .lf{left:calc((var(--w) - var(--d))/2);top:0;width:var(--d);height:var(--h);transform:rotateY(-90deg) translateZ(calc(var(--w)/2));filter:brightness(.8)}
+  .bx .rg{left:calc((var(--w) - var(--d))/2);top:0;width:var(--d);height:var(--h);transform:rotateY(90deg) translateZ(calc(var(--w)/2));filter:brightness(.8)}
+  .bx .tp{left:0;top:calc((var(--h) - var(--d))/2);width:var(--w);height:var(--d);transform:rotateX(90deg) translateZ(calc(var(--h)/2));filter:brightness(1.15)}
+  .bx .bt{left:0;top:calc((var(--h) - var(--d))/2);width:var(--w);height:var(--d);transform:rotateX(-90deg) translateZ(calc(var(--h)/2));filter:brightness(.55)}
+  .limb{transform-origin:50% 0}
+  :is(.tk.walking,.pv:hover) .swa{animation:swingA .6s ease-in-out infinite}
+  :is(.tk.walking,.pv:hover) .swb{animation:swingB .6s ease-in-out infinite}
+  @keyframes swingA{0%,100%{transform:rotateX(38deg)}50%{transform:rotateX(-38deg)}}
+  @keyframes swingB{0%,100%{transform:rotateX(-38deg)}50%{transform:rotateX(38deg)}}
+  .fig.yaw .wad{animation:none!important}
+  .tk.walking[data-dir="1"] .fig.yaw,.pv:hover .fig.yaw{transform:rotateY(55deg)}
+  .tk.walking[data-dir="-1"] .fig.yaw{transform:rotateY(-55deg)}
+  .pv{height:124px;display:flex;align-items:flex-end;justify-content:center;perspective:420px;margin-bottom:6px}
+  .ico{vertical-align:middle;image-rendering:pixelated}
+  .coinbar{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:20px;font-weight:800}
+  .coinbar .who{font-size:16px;color:var(--muted);font-weight:700}
+  #shopGrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .gc.sel{outline:4px solid var(--accent)}
+  .gc.locked .pv{filter:grayscale(.85);opacity:.7}
+  .gc .em.big2{font-size:56px;text-align:center}
+  .earn{color:var(--good);font-weight:900}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#000c;padding:12px 18px;border-radius:14px;z-index:99;font-weight:700;max-width:90vw;text-align:center}
+  .trophy{font-size:90px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- MENU -->
+  <div id="menu" class="menu">
+    <div class="center"><h1>🎲 Escaleras <span>Party</span></h1><div class="muted">Serpientes, escaleras y minijuegos</div></div>
+    <div class="card coinbar"><span>🪙 <b id="coins">0</b></span><span class="who" id="selChar"></span></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:12px">
+      <input id="name" type="text" maxlength="14" placeholder="Tu nombre" autocomplete="off">
+      <input id="server" class="hidden" type="text" placeholder="Servidor: 192.168.1.50:3000" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div id="serverHint" class="muted hidden" style="font-size:13px;margin-top:-4px">Dirección del servidor de la partida (la que muestra la compu al iniciar, o la liga https del túnel).</div>
+      <button class="btn" id="bCreate">Crear sala</button>
+      <div class="row">
+        <input id="codeIn" type="text" maxlength="4" placeholder="CÓDIGO" style="text-transform:uppercase;text-align:center;letter-spacing:4px">
+        <button class="btn pink" id="bJoin">Unirse</button>
+      </div>
+    </div>
+    <button class="btn ghost" id="bShop">🛍️ Tienda de personajes</button>
+    <button class="btn ghost" id="bSalon">🕹️ Salón de minijuegos</button>
+    <button class="btn pink hidden" id="bInstall">📲 Instalar app</button>
+  </div>
+
+  <!-- LOBBY -->
+  <div id="lobby" class="menu hidden">
+    <div class="card center">
+      <div class="muted">Código de la sala</div>
+      <div class="code" id="lobCode">----</div>
+      <div id="lanBox" class="lan hidden"></div>
+      <div class="plist" id="lobPlayers"></div>
+      <button class="btn" id="bStart">¡Empezar partida!</button>
+      <div class="muted" id="waitHost" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <!-- JUEGO -->
+  <div id="game" class="game hidden">
+    <div class="boardbox"><div class="stage"><div class="plane"><svg id="board" viewBox="0 0 800 500"></svg><div id="tk3d"></div></div></div></div>
+    <div class="side">
+      <div class="card">
+        <div class="round" id="roundInfo"></div>
+        <div class="die" id="die">🎲</div>
+        <div class="log" id="log"></div>
+        <button class="btn" id="bRoll" style="width:100%">🎲 ¡Tirar dado!</button>
+        <button class="btn ghost small" id="bView" style="width:100%;margin-top:10px">Vista: 3D</button>
+      </div>
+      <div class="card"><div class="plist" id="gamePlayers" style="margin:0"></div></div>
+    </div>
+  </div>
+
+  <!-- TIENDA -->
+  <div id="shop" class="hidden">
+    <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap">
+      <h1>🛍️ Tienda de <span>personajes</span></h1>
+      <button class="btn ghost" id="bBackShop">← Volver</button>
+    </div>
+    <div class="muted">Tienes 🪙 <b id="shopCoins">0</b>. Gana monedas jugando minijuegos (solo o en partida) y ganando partidas.</div>
+    <div class="grid" id="shopGrid"></div>
+  </div>
+
+  <!-- SALON -->
+  <div id="salon" class="hidden">
+    <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap">
+      <h1>🕹️ Salón de <span>minijuegos</span></h1>
+      <button class="btn ghost" id="bBack">← Volver</button>
+    </div>
+    <div class="muted">Practica solo. Tu mejor puntuación se guarda en este dispositivo.</div>
+    <div class="grid" id="salonGrid"></div>
+  </div>
+</div>
+
+<!-- Overlay de minijuego -->
+<div id="mg" class="overlay hidden">
+  <div class="mgbox">
+    <h2 id="mgTitle"></h2>
+    <div class="muted" id="mgDesc"></div>
+    <div id="mgCount"></div>
+    <div id="mgArea"></div>
+    <div id="mgFoot"></div>
+  </div>
+</div>
+
+<!-- Overlay de ganador -->
+<div id="win" class="overlay hidden">
+  <div class="mgbox">
+    <div class="trophy">🏆</div>
+    <h2 id="winName"></h2>
+    <div class="muted">¡Llegó a la meta!</div>
+    <div class="earn" id="winCoins" style="margin-top:10px"></div>
+    <br>
+    <button class="btn" id="bAgain">Volver al menú</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg, ms = 2600) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), ms);
+}
+// Generador pseudoaleatorio con semilla: todos los jugadores reciben el mismo reto
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+
+/* =========================================================
+   MINIJUEGOS
+   Cada uno: start(areaDOM, seed, terminar(score)) -> función de limpieza
+   Mayor puntuación = mejor.
+   Para agregar uno nuevo: añádelo aquí y su id en MINIGAMES de server.js
+   ========================================================= */
+const GAMES = {
+  tap: {
+    name: '¡Machaca!', emoji: '👆', desc: 'Toca el botón lo más rápido que puedas durante 10 segundos.',
+    fmt: s => `${s} toques`,
+    start(a, seed, fin) {
+      let n = 0, left = 10, over = false;
+      a.innerHTML = '<div class="bignum" id="tl">10</div><button class="bigbtn" id="tb">¡TOCA!</button><div class="bignum" id="tc">0</div>';
+      const b = a.querySelector('#tb');
+      b.onpointerdown = e => { e.preventDefault(); if (!over) { n++; a.querySelector('#tc').textContent = n; } };
+      const iv = setInterval(() => { left--; a.querySelector('#tl').textContent = left; if (left <= 0) end(); }, 1000);
+      function end() { if (over) return; over = true; clearInterval(iv); b.disabled = true; fin(n); }
+      return () => { over = true; clearInterval(iv); };
+    }
+  },
+
+  reflex: {
+    name: 'Reflejos', emoji: '⚡', desc: 'Espera a que se ponga verde y toca. ¡Si tocas antes, cero puntos!',
+    fmt: s => s > 0 ? `${1500 - s} ms` : 'Falló',
+    start(a, seed, fin) {
+      const r = rng(seed); const wait = 1500 + r() * 3000;
+      a.innerHTML = '<div class="pad red" id="pad">Espera el verde…</div>';
+      const pad = a.querySelector('#pad');
+      let greenAt = 0, over = false;
+      const t1 = setTimeout(() => { if (over) return; pad.className = 'pad green'; pad.textContent = '¡YA!'; greenAt = performance.now(); }, wait);
+      const t2 = setTimeout(() => end(0, 'Muy lento…'), wait + 2500);
+      function end(score, msg) {
+        if (over) return; over = true; clearTimeout(t1); clearTimeout(t2);
+        pad.className = 'pad done'; pad.textContent = msg || (1500 - score) + ' ms'; fin(score);
+      }
+      pad.onpointerdown = e => {
+        e.preventDefault(); if (over) return;
+        if (!greenAt) end(0, '¡Muy pronto!');
+        else end(Math.max(1, Math.round(1500 - (performance.now() - greenAt))));
+      };
+      return () => { over = true; clearTimeout(t1); clearTimeout(t2); };
+    }
+  },
+
+  catch: {
+    name: 'Atrapa monedas', emoji: '🧺', desc: 'Mueve la canasta con el dedo o el mouse. Monedas suman, bombas restan.',
+    fmt: s => `${s} pts`,
+    start(a, seed, fin) {
+      const W = 320, H = 420, DUR = 25;
+      a.innerHTML = `<canvas width="${W}" height="${H}"></canvas>`;
+      const cv = a.firstChild, ctx = cv.getContext('2d');
+      const r = rng(seed); const items = [];
+      for (let i = 0; i < 62; i++) items.push({ t: 0.4 + i * 0.38, x: 24 + r() * (W - 48), bomb: r() < 0.28, v: 150 + r() * 90, done: false });
+      let px = W / 2, score = 0, over = false, raf, t0 = 0;
+      const move = e => { const rc = cv.getBoundingClientRect(); px = Math.max(30, Math.min(W - 30, (e.clientX - rc.left) * W / rc.width)); };
+      cv.addEventListener('pointermove', move); cv.addEventListener('pointerdown', move);
+      function frame(now) {
+        if (over) return;
+        if (!t0) t0 = now;
+        const t = (now - t0) / 1000;
+        ctx.fillStyle = '#1b1340'; ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = 'center'; ctx.font = '28px serif';
+        for (const it of items) {
+          if (it.done || t < it.t) continue;
+          const y = (t - it.t) * it.v - 20;
+          if (y > H + 30) { it.done = true; continue; }
+          if (y > H - 70 && y < H - 20 && Math.abs(it.x - px) < 36) { it.done = true; score += it.bomb ? -2 : 1; continue; }
+          ctx.fillText(it.bomb ? '💣' : '🪙', it.x, y);
+        }
+        ctx.fillText('🧺', px, H - 24);
+        ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
+        ctx.fillText(`⏱ ${Math.max(0, Math.ceil(DUR - t))}   ⭐ ${Math.max(0, score)}`, 10, 22);
+        if (t >= DUR) { over = true; fin(Math.max(0, score)); return; }
+        raf = requestAnimationFrame(frame);
+      }
+      raf = requestAnimationFrame(frame);
+      return () => { over = true; cancelAnimationFrame(raf); };
+    }
+  },
+
+  math: {
+    name: 'Mates relámpago', emoji: '🧮', desc: '30 segundos: resuelve las operaciones que puedas. Se avanza solo al acertar.',
+    fmt: s => `${s} aciertos`,
+    start(a, seed, fin) {
+      const r = rng(seed); let score = 0, ans = 0, left = 30, over = false;
+      a.innerHTML = '<div class="info">⏱ <b id="tm">30</b> &nbsp; ✅ <b id="sc">0</b></div><div class="q" id="q"></div>' +
+        '<input id="in" type="number" inputmode="numeric" autocomplete="off" placeholder="Respuesta"><button id="skip" class="btn ghost small">Saltar</button>';
+      const inp = a.querySelector('#in');
+      function next() {
+        let q;
+        if (r() < 0.4) { const x = 2 + Math.floor(r() * 9), y = 2 + Math.floor(r() * 9); q = `${x} × ${y}`; ans = x * y; }
+        else {
+          const x = 10 + Math.floor(r() * 40), y = 5 + Math.floor(r() * 40);
+          if (r() < 0.5) { q = `${x} + ${y}`; ans = x + y; }
+          else { const hi = Math.max(x, y) + 2, lo = Math.min(x, y); q = `${hi} − ${lo}`; ans = hi - lo; }
+        }
+        a.querySelector('#q').textContent = q + ' = ?'; inp.value = '';
+      }
+      inp.addEventListener('input', () => {
+        if (over || inp.value === '') return;
+        if (Number(inp.value) === ans) { score++; a.querySelector('#sc').textContent = score; next(); }
+      });
+      a.querySelector('#skip').onclick = () => { if (!over) { next(); inp.focus(); } };
+      next(); setTimeout(() => inp.focus(), 50);
+      const iv = setInterval(() => { left--; a.querySelector('#tm').textContent = left; if (left <= 0) end(); }, 1000);
+      function end() { if (over) return; over = true; clearInterval(iv); inp.disabled = true; fin(score); }
+      return () => { over = true; clearInterval(iv); };
+    }
+  },
+
+  memory: {
+    name: 'Simón dice', emoji: '🧠', desc: 'Mira la secuencia de colores y repítela. Gana quien llegue más lejos.',
+    fmt: s => `${s} niveles`,
+    start(a, seed, fin) {
+      const cols = ['#e63946', '#2a9d8f', '#f4c430', '#1d8fe1'];
+      const r = rng(seed); const seq = Array.from({ length: 40 }, () => Math.floor(r() * 4));
+      a.innerHTML = '<div class="info" id="inf">Mira la secuencia…</div><div class="simon">' +
+        cols.map((c, i) => `<button class="sb" style="background:${c}" data-i="${i}"></button>`).join('') + '</div>';
+      const btns = [...a.querySelectorAll('.sb')], info = a.querySelector('#inf');
+      let dead = false, lock = true, pos = 0, need = 0, resolver = null, lvl = 0, ended = false;
+      const sleep = ms => new Promise(res => setTimeout(res, ms));
+      const flash = async i => { btns[i].classList.add('lit'); await sleep(300); btns[i].classList.remove('lit'); };
+      const cap = setTimeout(() => end(Math.max(0, lvl - 1)), 58000);
+      function end(s) { if (ended) return; ended = true; dead = true; clearTimeout(cap); lock = true; fin(s); }
+      btns.forEach((b, i) => b.onpointerdown = e => {
+        e.preventDefault(); if (lock || dead) return;
+        flash(i);
+        if (i !== seq[pos]) { lock = true; if (resolver) resolver(false); }
+        else { pos++; if (pos === need) { lock = true; if (resolver) resolver(true); } }
+      });
+      (async () => {
+        for (let n = 1; n <= 40 && !dead; n++) {
+          lvl = n; need = n; pos = 0; lock = true;
+          info.textContent = `Nivel ${n}: mira…`; await sleep(600);
+          for (let i = 0; i < n && !dead; i++) { flash(seq[i]); await sleep(650); }
+          if (dead) return;
+          info.textContent = '¡Tu turno!'; lock = false;
+          const ok = await new Promise(res => resolver = res);
+          if (dead) return;
+          if (!ok) { info.textContent = '¡Fallaste!'; end(n - 1); return; }
+          info.textContent = '¡Bien!'; await sleep(400);
+        }
+        end(40);
+      })();
+      return () => { dead = true; ended = true; clearTimeout(cap); };
+    }
+  },
+
+  aim: {
+    name: 'Tiro al blanco', emoji: '🎯', desc: 'Toca los blancos antes de que desaparezcan. 20 segundos.',
+    fmt: s => `${s} blancos`,
+    start(a, seed, fin) {
+      const W = 320, H = 400, DUR = 20, R = 28;
+      a.innerHTML = `<canvas width="${W}" height="${H}"></canvas>`;
+      const cv = a.firstChild, ctx = cv.getContext('2d');
+      const r = rng(seed); const T = [];
+      for (let i = 0; i < 44; i++) T.push({ t: 0.5 + i * 0.45, life: 1.4, x: R + r() * (W - 2 * R), y: 40 + R + r() * (H - 80 - 2 * R), hit: false });
+      let score = 0, over = false, raf, t0 = 0, now = 0;
+      cv.addEventListener('pointerdown', e => {
+        e.preventDefault(); if (over) return;
+        const rc = cv.getBoundingClientRect(), x = (e.clientX - rc.left) * W / rc.width, y = (e.clientY - rc.top) * H / rc.height;
+        for (const tg of T) {
+          if (tg.hit || now < tg.t || now > tg.t + tg.life) continue;
+          if (Math.hypot(tg.x - x, tg.y - y) <= R + 6) { tg.hit = true; score++; break; }
+        }
+      });
+      function frame(ts) {
+        if (over) return;
+        if (!t0) t0 = ts;
+        now = (ts - t0) / 1000;
+        ctx.fillStyle = '#1b1340'; ctx.fillRect(0, 0, W, H);
+        for (const tg of T) {
+          if (tg.hit || now < tg.t || now > tg.t + tg.life) continue;
+          const k = 1 - (now - tg.t) / tg.life, rad = R * (0.45 + 0.55 * k);
+          ctx.beginPath(); ctx.arc(tg.x, tg.y, rad, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+          ctx.beginPath(); ctx.arc(tg.x, tg.y, rad * 0.66, 0, 7); ctx.fillStyle = '#e63946'; ctx.fill();
+          ctx.beginPath(); ctx.arc(tg.x, tg.y, rad * 0.3, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+        }
+        ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
+        ctx.fillText(`⏱ ${Math.max(0, Math.ceil(DUR - now))}   🎯 ${score}`, 10, 22);
+        if (now >= DUR) { over = true; fin(score); return; }
+        raf = requestAnimationFrame(frame);
+      }
+      raf = requestAnimationFrame(frame);
+      return () => { over = true; cancelAnimationFrame(raf); };
+    }
+  },
+
+  dodge: {
+    name: 'Esquiva', emoji: '☄️', desc: 'Mueve tu nave con el dedo o el mouse y esquiva los meteoritos. Gana quien aguante más (máx. 30 s).',
+    fmt: s => `${(s / 10).toFixed(1)} s`,
+    start(a, seed, fin) {
+      const W = 320, H = 420, DUR = 30;
+      a.innerHTML = `<canvas width="${W}" height="${H}"></canvas>`;
+      const cv = a.firstChild, ctx = cv.getContext('2d');
+      const r = rng(seed); const M = [];
+      for (let i = 0; i < 90; i++) M.push({ t: 0.6 + i * 0.36 - Math.min(i, 60) * 0.004, x: 16 + r() * (W - 32), s: 11 + r() * 15, v: 170 + r() * 90 + i * 1.6 });
+      let px = W / 2, over = false, raf, t0 = 0;
+      const move = e => { const rc = cv.getBoundingClientRect(); px = Math.max(14, Math.min(W - 14, (e.clientX - rc.left) * W / rc.width)); };
+      cv.addEventListener('pointermove', move); cv.addEventListener('pointerdown', move);
+      const sy = H - 40;
+      function frame(ts) {
+        if (over) return;
+        if (!t0) t0 = ts;
+        const t = (ts - t0) / 1000;
+        ctx.fillStyle = '#1b1340'; ctx.fillRect(0, 0, W, H);
+        ctx.textAlign = 'center';
+        let hit = false;
+        for (const m of M) {
+          if (t < m.t) continue;
+          const y = (t - m.t) * m.v - 30;
+          if (y > H + 40) continue;
+          if (Math.hypot(m.x - px, y - sy) < m.s * 0.5 + 12) hit = true;
+          ctx.font = `${m.s * 1.7}px serif`; ctx.fillText('☄️', m.x, y + m.s * 0.6);
+        }
+        ctx.font = '30px serif'; ctx.fillText('🚀', px, sy + 10);
+        ctx.font = 'bold 16px sans-serif'; ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
+        ctx.fillText(`⏱ ${t.toFixed(1)} s`, 10, 22);
+        if (hit) { over = true; ctx.fillText('💥', px - 10, sy); fin(Math.round(t * 10)); return; }
+        if (t >= DUR) { over = true; fin(DUR * 10); return; }
+        raf = requestAnimationFrame(frame);
+      }
+      raf = requestAnimationFrame(frame);
+      return () => { over = true; cancelAnimationFrame(raf); };
+    }
+  },
+
+  stroop: {
+    name: 'Color trampa', emoji: '🎨', desc: 'Toca el botón del COLOR de la tinta, no de lo que dice la palabra. Acierto +1, error −1. 20 s.',
+    fmt: s => `${s} pts`,
+    start(a, seed, fin) {
+      const NAMES = ['ROJO', 'AZUL', 'VERDE', 'AMARILLO'], INK = ['#ff4d5a', '#3aa0ff', '#3ddc97', '#ffd23f'];
+      const r = rng(seed); let score = 0, left = 20, over = false, ink = 0;
+      a.innerHTML = '<div class="info">⏱ <b id="tm">20</b> &nbsp; ⭐ <b id="sc">0</b></div><div class="q" id="q" style="min-height:62px"></div>' +
+        '<div class="simon">' + NAMES.map((n, i) => `<button class="btn ghost" data-i="${i}" style="padding:22px 8px">${n}</button>`).join('') + '</div>';
+      const q = a.querySelector('#q');
+      function next() {
+        const word = Math.floor(r() * 4); let c = Math.floor(r() * 4);
+        if (r() < 0.8 && c === word) c = (c + 1 + Math.floor(r() * 3)) % 4; // casi siempre distinto
+        ink = c; q.textContent = NAMES[word]; q.style.color = INK[c];
+      }
+      a.querySelectorAll('button').forEach(b => b.onpointerdown = e => {
+        e.preventDefault(); if (over) return;
+        score += (+b.dataset.i === ink) ? 1 : -1; if (score < 0) score = 0;
+        a.querySelector('#sc').textContent = score; next();
+      });
+      next();
+      const iv = setInterval(() => { left--; a.querySelector('#tm').textContent = left; if (left <= 0) end(); }, 1000);
+      function end() { if (over) return; over = true; clearInterval(iv); a.querySelectorAll('button').forEach(b => b.disabled = true); fin(score); }
+      return () => { over = true; clearInterval(iv); };
+    }
+  },
+
+  stopbar: {
+    name: 'Punto exacto', emoji: '🎚️', desc: 'Detén la barra justo en el centro. 5 intentos: entre más cerca, más puntos (máx. 500).',
+    fmt: s => `${s} pts`,
+    start(a, seed, fin) {
+      const r = rng(seed); const speeds = Array.from({ length: 5 }, () => 0.7 + r() * 1.1);
+      a.innerHTML = '<div class="info">Intento <b id="at">1</b> / 5 &nbsp; ⭐ <b id="sc">0</b></div>' +
+        '<div style="position:relative;width:100%;height:60px;background:#1b1340;border-radius:14px;overflow:hidden">' +
+        '<div style="position:absolute;left:46%;width:8%;top:0;bottom:0;background:#3ddc9755"></div>' +
+        '<div style="position:absolute;left:50%;width:3px;top:0;bottom:0;background:#3ddc97"></div>' +
+        '<div id="bar" style="position:absolute;top:6px;bottom:6px;width:14px;margin-left:-7px;border-radius:7px;background:#ffd23f"></div></div>' +
+        '<div class="info" id="msg" style="min-height:28px"></div><button class="bigbtn" id="stop">¡DETENER!</button>';
+      const bar = a.querySelector('#bar'), msg = a.querySelector('#msg');
+      let i = 0, score = 0, over = false, raf, t0 = performance.now(), frozen = false, cur = 0;
+      const cap = setTimeout(() => end(), 24000);
+      function end() { if (over) return; over = true; clearTimeout(cap); cancelAnimationFrame(raf); a.querySelector('#stop').disabled = true; fin(score); }
+      function frame(ts) {
+        if (over) return;
+        if (!frozen) {
+          const ph = (((ts - t0) / 1000) * speeds[i]) % 2; cur = ph < 1 ? ph : 2 - ph;
+          bar.style.left = (cur * 100) + '%';
+        }
+        raf = requestAnimationFrame(frame);
+      }
+      raf = requestAnimationFrame(frame);
+      a.querySelector('#stop').onpointerdown = e => {
+        e.preventDefault(); if (over || frozen) return;
+        const pts = Math.max(0, Math.round(100 * (1 - Math.abs(cur - 0.5) * 2)));
+        score += pts; a.querySelector('#sc').textContent = score; msg.textContent = `+${pts}`;
+        frozen = true;
+        setTimeout(() => {
+          if (over) return;
+          i++;
+          if (i >= 5) { end(); return; }
+          a.querySelector('#at').textContent = i + 1; msg.textContent = ''; frozen = false; t0 = performance.now();
+        }, 700);
+      };
+      return () => { over = true; clearTimeout(cap); cancelAnimationFrame(raf); };
+    }
+  },
+
+  pairs: {
+    name: 'Memorama', emoji: '🃏', desc: 'Encuentra las 6 parejas. Cada pareja vale 100 y si las terminas todas ganas bonus por rapidez (45 s máx.).',
+    fmt: s => `${s} pts`,
+    start(a, seed, fin) {
+      const r = rng(seed); const faces = ['🍎', '🍌', '🍇', '🍒', '🍉', '🥝'];
+      const deck = faces.concat(faces);
+      for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
+      a.innerHTML = '<div class="info">⏱ <b id="tm">45</b> &nbsp; ✅ <b id="sc">0</b> / 6</div><div class="simon" style="grid-template-columns:repeat(3,1fr)">' +
+        deck.map((f, i) => `<button class="btn ghost" data-i="${i}" style="font-size:38px;height:84px;padding:0">❓</button>`).join('') + '</div>';
+      const btns = [...a.querySelectorAll('button')];
+      let open = [], found = 0, lock = false, over = false, left = 45;
+      const t0 = performance.now();
+      const iv = setInterval(() => { left--; a.querySelector('#tm').textContent = Math.max(0, left); if (left <= 0) end(); }, 1000);
+      function end() {
+        if (over) return; over = true; clearInterval(iv);
+        const secs = (performance.now() - t0) / 1000;
+        fin(found === 6 ? 600 + Math.max(0, Math.round((45 - secs) * 10)) : found * 100);
+      }
+      btns.forEach((b, i) => b.onpointerdown = e => {
+        e.preventDefault();
+        if (over || lock || open.includes(i) || b.dataset.done) return;
+        b.textContent = deck[i]; open.push(i);
+        if (open.length === 2) {
+          const [x, y] = open;
+          if (deck[x] === deck[y]) {
+            btns[x].dataset.done = btns[y].dataset.done = '1'; btns[x].style.opacity = btns[y].style.opacity = '.45';
+            found++; a.querySelector('#sc').textContent = found; open = [];
+            if (found === 6) end();
+          } else {
+            lock = true;
+            setTimeout(() => { btns[x].textContent = btns[y].textContent = '❓'; open = []; lock = false; }, 650);
+          }
+        }
+      });
+      return () => { over = true; clearInterval(iv); };
+    }
+  },
+};
+
+/* ---------- Overlay de minijuego (compartido por salón y partida) ---------- */
+let cancelFn = null, cdTimer = null;
+function stopMinigame() { if (cancelFn) { cancelFn(); cancelFn = null; } clearInterval(cdTimer); }
+function closeMgOverlay() { stopMinigame(); $('mg').classList.add('hidden'); }
+function runMinigame(id, seed, onScore) {
+  stopMinigame();
+  const g = GAMES[id];
+  $('mgTitle').textContent = `${g.emoji} ${g.name}`;
+  $('mgDesc').textContent = g.desc;
+  $('mgArea').innerHTML = ''; $('mgFoot').innerHTML = '';
+  $('mg').classList.remove('hidden');
+  let c = 3; $('mgCount').textContent = `Prepárate… ${c}`;
+  cdTimer = setInterval(() => {
+    c--;
+    if (c > 0) { $('mgCount').textContent = `Prepárate… ${c}`; return; }
+    clearInterval(cdTimer);
+    $('mgCount').textContent = '¡YA!';
+    let done = false;
+    cancelFn = g.start($('mgArea'), seed, score => {
+      if (done) return; done = true;
+      $('mgCount').textContent = `Resultado: ${g.fmt(score)}`;
+      onScore(score);
+    });
+  }, 1000);
+}
+
+/* =========================================================
+   MONEDAS Y PERSONAJES
+   Para agregar uno: añádelo aquí y su id en CHAR_IDS de server.js
+   ========================================================= */
+/* ---- Pixel art (cada letra es un color de la paleta, '.' = transparente) ---- */
+const rep = (c, n) => c.repeat(n);
+// Guerrero de pelo de pinchos (se reutiliza con distintos colores)
+const WARRIOR_ROWS = [
+  '..a..aa..a..',
+  '.aaa.aa.aaa.',
+  '.' + rep('a', 10) + '.',
+  '.' + rep('a', 10) + '.',
+  '.aA' + rep('f', 6) + 'Aa.',
+  '..fwpffpwf..',
+  '..' + rep('f', 8) + '..',
+  '...' + rep('f', 6) + '...',
+  '.tt' + rep('o', 6) + 'tt.',
+  'ff.' + rep('o', 6) + '.ff',
+  'ff.oo' + 'bb' + 'oo.ff',
+  '...' + rep('o', 6) + '...',
+  '...oo..oo...',
+  '..kkk..kkk..',
+];
+// Segundo cuadro de la caminata: las piernas (últimas dos filas) se abren
+const frameB = (rows, r12, r13) => rows.map((r, i) => (i === 12 ? r12 : i === 13 ? r13 : r));
+const warrior = (id, n, p, e, hair, shade, outfit, trim) => ({
+  id, e, n, p, kind: 'sprite', rows: WARRIOR_ROWS, aura: hair,
+  rows2: frameB(WARRIOR_ROWS, '..oo....oo..', '.kkk....kkk.'),
+  pal: { a: hair, A: shade, f: '#f6c9a0', w: '#ffffff', p: '#1b1340', o: outfit, t: trim, b: '#f2c230', k: '#1b1340' },
+});
+// Guerrera encapuchada con una aguja larga
+const NEEDLE_ROWS = [
+  '....kkkk....',
+  '...khhhhk..s',
+  '..k' + rep('h', 6) + 'k.s',
+  '..khfffhhk.s',
+  '..khfeefhk.s',
+  '..khffffhk.s',
+  '...kkffkk..s',
+  '..kghhhhgk.s',
+  '.k' + rep('h', 8) + 'ks',
+  '.khHhhhhHhks',
+  '.k' + rep('h', 8) + 'ks',
+  '..kHhhhhHk.s',
+  '..kHk..kHk.s',
+  '...kk..kk..s',
+];
+// Caras de 8x8 para los personajes de cubos
+const SKULL_FACE = ['wwwwwwww', 'wkkwwkkw', 'wkkwwkkw', 'wwwwwwww', 'wwwkkwww', 'wwwwwwww', 'wkwkwkww', 'wwwwwwww'];
+const CUBE_FACE = ['bbbbbbbb', 'bwwbbwwb', 'bwkbbkwb', 'bbbbbbbb', 'bbbbbbbb', 'bkbbbbkb', 'bbkkkkbb', 'bbbbbbbb'];
+const ROBOT_FACE = ['gggggggg', 'gddddddg', 'gdcddcdg', 'gdcddcdg', 'gddddddg', 'gdccccdg', 'gddddddg', 'gggggggg'];
+
+const CHARS = [
+  { id: 'gato', e: '🐱', n: 'Gato', p: 0 },
+  { id: 'perro', e: '🐶', n: 'Perro', p: 0 },
+  { id: 'zorro', e: '🦊', n: 'Zorro', p: 30 },
+  { id: 'rana', e: '🐸', n: 'Rana', p: 30 },
+  { id: 'panda', e: '🐼', n: 'Panda', p: 50 },
+  { id: 'pulpo', e: '🐙', n: 'Pulpo', p: 60 },
+  { id: 'robot', e: '🤖', n: 'Robot', p: 80 },
+  { id: 'alien', e: '👽', n: 'Alien', p: 80 },
+  { id: 'fantasma', e: '👻', n: 'Fantasma', p: 100 },
+  { id: 'unicornio', e: '🦄', n: 'Unicornio', p: 120 },
+  { id: 'dragon', e: '🐲', n: 'Dragón', p: 150 },
+  { id: 'mago', e: '🧙', n: 'Mago', p: 180 },
+  { id: 'astronauta', e: '🧑‍🚀', n: 'Astronauta', p: 220 },
+  { id: 'rey', e: '👑', n: 'Rey del tablero', p: 300 },
+  // --- Personajes en pixel art ---
+  { id: 'guerrera', e: '🗡️', n: 'Guerrera de la aguja', p: 200, kind: 'sprite', rows: NEEDLE_ROWS, aura: '#a77bff',
+    rows2: frameB(NEEDLE_ROWS, '.kHk...kHk.s', '.kk....kk..s'),
+    pal: { k: '#1b1340', h: '#7a4fd1', H: '#4b2a85', f: '#f3e8dc', e: '#ffbf1f', g: '#f2c230', s: '#d7e8ff' } },
+  warrior('aqua', 'Guerrero Aqua', 220, '⚡', '#31d6e8', '#1a9fb3', '#f4f4f4', '#2fbf7a'),
+  warrior('magma', 'Guerrero Magma', 240, '🔥', '#ff4a2a', '#b32a14', '#33333f', '#ff9f1c'),
+  warrior('nova', 'Guerrero Nova', 260, '🌟', '#b46bff', '#7a3fc4', '#16161f', '#d7b8ff'),
+  // --- Personajes de cubos 3D ---
+  { id: 'cubo', e: '🧊', n: 'Cubo', p: 90, kind: 'cube', face: CUBE_FACE, fpal: { b: '#3aa0ff', w: '#ffffff', k: '#1b1340' }, head: '#3aa0ff', body: '#ffd23f', arms: '#3aa0ff', legs: '#2a5db0' },
+  { id: 'calavera', e: '💀', n: 'Calavera', p: 130, kind: 'cube', face: SKULL_FACE, fpal: { w: '#efe9d6', k: '#1b1340' }, head: '#e8e2cc', body: '#3a3a4d', arms: '#e8e2cc', legs: '#2a2a38',
+    bodyFront: 'background:repeating-linear-gradient(#3a3a4d 0 10%,#d9d3bd 10% 16%)' },
+  { id: 'robovox', e: '🤖', n: 'Robot voxel', p: 170, kind: 'cube', face: ROBOT_FACE, fpal: { g: '#9aa5b8', d: '#1b1340', c: '#4de8ff' }, head: '#9aa5b8', body: '#e63946', arms: '#9aa5b8', legs: '#5f6a7d',
+    bodyFront: 'background:radial-gradient(circle at 50% 32%,#4de8ff 0 16%,transparent 17%),#e63946' },
+];
+const CH = Object.fromEntries(CHARS.map(c => [c.id, c]));
+const FREE = CHARS.filter(c => c.p === 0).map(c => c.id);
+const wallet = { coins: 0, owned: FREE.slice(), sel: 'gato' };
+function loadWallet() {
+  try {
+    const w = JSON.parse(localStorage.getItem('ep_wallet') || 'null');
+    if (w && typeof w.coins === 'number') {
+      wallet.coins = Math.max(0, Math.floor(w.coins));
+      if (Array.isArray(w.owned)) wallet.owned = [...new Set([...FREE, ...w.owned.filter(id => CH[id])])];
+      if (CH[w.sel] && wallet.owned.includes(w.sel)) wallet.sel = w.sel;
+    }
+  } catch {}
+}
+function saveWallet() { try { localStorage.setItem('ep_wallet', JSON.stringify(wallet)); } catch {} }
+function renderWallet() {
+  $('coins').textContent = wallet.coins;
+  $('selChar').textContent = `${CH[wallet.sel].e} ${CH[wallet.sel].n}`;
+}
+function addCoins(n) { wallet.coins += n; saveWallet(); renderWallet(); }
+const charOf = p => (CH[p.char] ? CH[p.char].e : '🙂');
+
+// Convierte un mapa de letras en una imagen pixelada (se guarda en caché)
+const _pix = {};
+function pixURL(key, rows, pal) {
+  if (_pix[key]) return _pix[key];
+  const w = rows[0].length, h = rows.length;
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const x = cv.getContext('2d');
+  rows.forEach((row, j) => [...row].forEach((ch, i) => { if (pal[ch]) { x.fillStyle = pal[ch]; x.fillRect(i, j, 1, 1); } }));
+  return (_pix[key] = cv.toDataURL());
+}
+// Cuerpo del personaje: su tamaño sale de la variable CSS --s
+function bodyHtml(id) {
+  const c = CH[id] || CH.gato;
+  if (c.kind === 'sprite') {
+    const a = pixURL(c.id, c.rows, c.pal), b = pixURL(c.id + '_b', c.rows2 || c.rows, c.pal), au = `--aura:${c.aura || 'transparent'}`;
+    return `<div class="fig flip"><div class="wad"><div class="sprw"><img class="spr s1" alt="" src="${a}" style="${au}"><img class="spr s2" alt="" src="${b}" style="${au}"></div></div></div>`;
+  }
+  if (c.kind === 'cube') {
+    const face = pixURL(c.id + '_f', c.face, c.fpal);
+    // Una caja: ancho, alto y fondo en "unidades" (--u); la cara frontal puede llevar un fondo propio
+    const box = (w, h, d, col, front, pos, cls = '') =>
+      `<div class="bx ${cls}" style="--w:calc(var(--u)*${w});--h:calc(var(--u)*${h});--d:calc(var(--u)*${d});${pos}">` +
+      `<div class="f fr" style="${front || 'background:' + col}"></div>` +
+      ['bk', 'lf', 'rg', 'tp', 'bt'].map(k => `<div class="f ${k}" style="background:${col}"></div>`).join('') + '</div>';
+    const U = n => `calc(var(--u)*${n})`;
+    const arms = c.arms || c.head, legs = c.legs || c.body;
+    return `<div class="fig yaw"><div class="wad"><div class="char3 lmb">` +
+      box(4, 12, 4, legs, '', `left:${U(4)};top:${U(20)}`, 'limb swb') +   // pierna izquierda
+      box(4, 12, 4, legs, '', `left:${U(8)};top:${U(20)}`, 'limb swa') +   // pierna derecha
+      box(8, 12, 4, c.body, c.bodyFront, `left:${U(4)};top:${U(8)}`) +     // cuerpo
+      box(4, 12, 4, arms, '', `left:0;top:${U(8)}`, 'limb swa') +          // brazo izquierdo
+      box(4, 12, 4, arms, '', `left:${U(12)};top:${U(8)}`, 'limb swb') +   // brazo derecho
+      box(8, 8, 8, c.head, `background-color:${c.head};background-image:url(${face})`, `left:${U(4)};top:0`) + // cabeza
+      '</div></div></div>';
+  }
+  return `<div class="fig"><div class="wad"><div class="em">${c.e}</div></div></div>`;
+}
+// Icono chico para listas
+function iconHtml(id, px = 20) {
+  const c = CH[id] || CH.gato;
+  if (c.kind === 'sprite') return `<img class="ico" alt="" src="${pixURL(c.id, c.rows, c.pal)}" style="width:${Math.round(px * 12 / 14)}px;height:${px}px">`;
+  if (c.kind === 'cube') return `<img class="ico" alt="" src="${pixURL(c.id + '_f', c.face, c.fpal)}" style="width:${px}px;height:${px}px;border-radius:4px">`;
+  return `<span class="ico">${c.e}</span>`;
+}
+
+function buildShop() {
+  $('shopCoins').textContent = wallet.coins;
+  $('shopGrid').innerHTML = CHARS.map(c => {
+    const owned = wallet.owned.includes(c.id), sel = wallet.sel === c.id;
+    const btn = owned
+      ? (sel ? '<button class="btn small" disabled>✓ Elegido</button>' : `<button class="btn pink small" data-sel="${c.id}">Elegir</button>`)
+      : `<button class="btn small" data-buy="${c.id}" ${wallet.coins < c.p ? 'disabled' : ''}>Comprar 🪙 ${c.p}</button>`;
+    return `<div class="gc ${sel ? 'sel' : ''} ${owned ? '' : 'locked'}"><div class="pv" style="--s:52px">${bodyHtml(c.id)}</div><div class="t" style="text-align:center">${c.n}</div>` +
+      `<div class="b" style="text-align:center">${owned ? 'Tuyo' : '🔒 ' + c.p + ' monedas'}</div>${btn}</div>`;
+  }).join('');
+  $('shopGrid').querySelectorAll('[data-buy]').forEach(b => b.onclick = () => {
+    const c = CH[b.dataset.buy];
+    if (wallet.coins < c.p || wallet.owned.includes(c.id)) return;
+    wallet.coins -= c.p; wallet.owned.push(c.id); wallet.sel = c.id; saveWallet(); renderWallet(); buildShop();
+    toast(`¡Compraste a ${c.n}! ${c.e}`);
+  });
+  $('shopGrid').querySelectorAll('[data-sel]').forEach(b => b.onclick = () => {
+    wallet.sel = b.dataset.sel; saveWallet(); renderWallet(); buildShop();
+  });
+}
+
+/* ---------- Salón de minijuegos (modo solo) ---------- */
+function bestScores() { try { return JSON.parse(localStorage.getItem('ep_best') || '{}'); } catch { return {}; } }
+function saveBest(id, s) { try { const b = bestScores(); if (!(id in b) || s > b[id]) { b[id] = s; localStorage.setItem('ep_best', JSON.stringify(b)); } } catch {} }
+function buildSalon() {
+  const best = bestScores();
+  $('salonGrid').innerHTML = Object.entries(GAMES).map(([id, g]) => `
+    <div class="gc"><div class="em">${g.emoji}</div><div class="t">${g.name}</div><div class="d">${g.desc}</div>
+    <div class="b">${id in best ? '🏅 Mejor: ' + g.fmt(best[id]) : 'Sin récord todavía'}</div>
+    <button class="btn small" data-play="${id}">Jugar</button></div>`).join('');
+  $('salonGrid').querySelectorAll('[data-play]').forEach(b => b.onclick = () => playSolo(b.dataset.play));
+}
+function playSolo(id) {
+  runMinigame(id, Math.floor(Math.random() * 2 ** 31), score => {
+    const prev = bestScores()[id];
+    const record = score > 0 && (prev === undefined || score > prev);
+    const earned = 3 + (record ? 5 : 0);
+    saveBest(id, score); addCoins(earned);
+    $('mgCount').textContent += record ? ' · ¡Nuevo récord!' : '';
+    $('mgFoot').innerHTML = `<span class="earn" style="width:100%">+${earned} 🪙</span><button class="btn small" id="again">Otra vez</button><button class="btn ghost small" id="exit">Salir</button>`;
+    $('again').onclick = () => playSolo(id);
+    $('exit').onclick = () => { closeMgOverlay(); buildSalon(); };
+  });
+  // botón de salir también durante la partida
+  $('mgFoot').innerHTML = '<button class="btn ghost small" id="exit0">✕ Salir</button>';
+  $('exit0').onclick = () => { closeMgOverlay(); buildSalon(); };
+}
+
+/* =========================================================
+   TABLERO
+   ========================================================= */
+const NS = 'http://www.w3.org/2000/svg';
+const COLS = 8, ROWS = 5, CELL = 100;
+function cxy(n) {
+  const i = n - 1, row = Math.floor(i / COLS);
+  const col = row % 2 === 0 ? i % COLS : COLS - 1 - (i % COLS);
+  return [col * CELL + CELL / 2, (ROWS - 1 - row) * CELL + CELL / 2];
+}
+function ladderSvg(a, b) {
+  const [x1, y1] = cxy(a), [x2, y2] = cxy(b);
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), px = -dy / L * 11, py = dx / L * 11;
+  let s = `<g stroke="#a0642a" stroke-width="6" stroke-linecap="round">` +
+    `<line x1="${x1 + px}" y1="${y1 + py}" x2="${x2 + px}" y2="${y2 + py}"/>` +
+    `<line x1="${x1 - px}" y1="${y1 - py}" x2="${x2 - px}" y2="${y2 - py}"/></g><g stroke="#d9a066" stroke-width="5" stroke-linecap="round">`;
+  const steps = Math.max(2, Math.floor(L / 26));
+  for (let i = 1; i < steps; i++) {
+    const f = i / steps, cx = x1 + dx * f, cy = y1 + dy * f;
+    s += `<line x1="${cx + px}" y1="${cy + py}" x2="${cx - px}" y2="${cy - py}"/>`;
+  }
+  return s + '</g>';
+}
+function snakeSvg(a, b) { // cabeza en a (arriba), cola en b
+  const [x1, y1] = cxy(a), [x2, y2] = cxy(b);
+  const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), px = -dy / L, py = dx / L, k = L * 0.2;
+  const d = `M${x1},${y1} C${x1 + dx * .33 + px * k},${y1 + dy * .33 + py * k} ${x1 + dx * .66 - px * k},${y1 + dy * .66 - py * k} ${x2},${y2}`;
+  return `<path d="${d}" fill="none" stroke="#1f7a3a" stroke-width="15" stroke-linecap="round"/>` +
+    `<path d="${d}" fill="none" stroke="#3ddc6a" stroke-width="9" stroke-linecap="round" stroke-dasharray="14 10"/>` +
+    `<circle cx="${x1}" cy="${y1}" r="17" fill="#2fbf5a" stroke="#1f7a3a" stroke-width="3"/>` +
+    `<circle cx="${x1 - 6}" cy="${y1 - 4}" r="4" fill="#fff"/><circle cx="${x1 + 6}" cy="${y1 - 4}" r="4" fill="#fff"/>` +
+    `<circle cx="${x1 - 6}" cy="${y1 - 4}" r="2" fill="#000"/><circle cx="${x1 + 6}" cy="${y1 - 4}" r="2" fill="#000"/>` +
+    `<path d="M${x1 - 4},${y1 + 7} q4,4 8,0" stroke="#c0392b" stroke-width="2.5" fill="none"/>`;
+}
+let boardBuilt = false;
+function buildBoard(board) {
+  let h = '', nums = '';
+  // 1) casillas, 2) escaleras y serpientes, 3) números por encima, 4) fichas
+  for (let n = 1; n <= board.end; n++) {
+    const [x, y] = cxy(n);
+    h += `<rect x="${x - 50}" y="${y - 50}" width="100" height="100" fill="${n % 2 ? '#f6e7ff' : '#e3d4ff'}" stroke="#7b5cc4" stroke-width="2"/>`;
+    nums += `<text x="${x - 44}" y="${y - 28}" class="cn">${n}</text>`;
+  }
+  for (const [a, b] of Object.entries(board.ladders)) h += ladderSvg(+a, +b);
+  for (const [a, b] of Object.entries(board.snakes)) h += snakeSvg(+a, +b);
+  { const [x, y] = cxy(1); nums += `<text x="${x + 46}" y="${y - 30}" class="sm" text-anchor="end" style="text-anchor:end">SALIDA</text>`; }
+  { const [x, y] = cxy(board.end); nums += `<text x="${x + 6}" y="${y + 14}" class="big">🏁</text>`; }
+  h += nums + '<g id="tokens"></g>';
+  $('board').innerHTML = h;
+  boardBuilt = true;
+}
+function updateTokens() {
+  const g = $('tk3d'); if (!g || !st) return;
+  st.players.forEach((p, i) => {
+    let el = document.getElementById('tok-' + p.id);
+    if (!el) {
+      el = document.createElement('div'); el.id = 'tok-' + p.id; el.className = 'tk';
+      el.style.setProperty('--pc', p.color);
+      el.innerHTML = `<div class="ring"></div><div class="stand"><div class="bob"><div class="tag">${esc(p.name.slice(0, 9))}</div>${bodyHtml(p.char)}</div></div>`;
+      g.appendChild(el);
+    }
+    const pos = dispPos[p.id] ?? p.pos;
+    const [x, y] = cxy(Math.max(1, pos));
+    const ox = ((i % 3) - 1) * 33, oy = 12 + (Math.floor(i / 3) - 0.5) * 40;
+    el.style.left = ((x + ox) / 8) + '%'; el.style.top = ((y + oy) / 5) + '%';
+    el.style.opacity = p.connected ? 1 : 0.35;
+    if (el.dataset.pos !== String(pos)) {
+      const first = el.dataset.pos === undefined; el.dataset.pos = pos;
+      if (!first && !walking.has(p.id) && !el.classList.contains('slide')) { el.classList.remove('hop'); void el.offsetWidth; el.classList.add('hop'); }
+    }
+  });
+}
+
+/* =========================================================
+   RED Y PANTALLAS
+   ========================================================= */
+let ws = null, me = null, st = null, lan = [], dispPos = {}, rolling = false, currentCode = '', paidWin = false;
+const walking = new Set();
+
+// Camina la ficha casilla por casilla (≈300 ms por paso), volteando hacia donde va
+function walkTo(pid, from, landed, done) {
+  const tk = document.getElementById('tok-' + pid);
+  if (!tk || landed <= from) { if (done) done(); return; }
+  walking.add(pid); tk.classList.add('walking');
+  let n = from;
+  (function step() {
+    if (n >= landed) { walking.delete(pid); tk.classList.remove('walking'); if (done) done(); return; }
+    n++;
+    const [x0] = cxy(Math.max(1, dispPos[pid] ?? from)), [x1] = cxy(n);
+    if (x1 !== x0) tk.dataset.dir = x1 > x0 ? '1' : '-1';
+    dispPos[pid] = n; updateTokens();
+    setTimeout(step, 300);
+  })();
+}
+// Desliza la ficha por una serpiente o escalera
+function slideTo(pid, to, done) {
+  const tk = document.getElementById('tok-' + pid);
+  if (!tk) { dispPos[pid] = to; updateTokens(); if (done) done(); return; }
+  const [x0] = cxy(Math.max(1, dispPos[pid] ?? 1)), [x1] = cxy(to);
+  if (x1 !== x0) tk.dataset.dir = x1 > x0 ? '1' : '-1';
+  tk.classList.add('slide'); dispPos[pid] = to; updateTokens();
+  setTimeout(() => { tk.classList.remove('slide'); if (done) done(); }, 950);
+}
+const DICE = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+
+function show(screen) {
+  for (const s of ['menu', 'lobby', 'game', 'salon', 'shop']) $(s).classList.toggle('hidden', s !== screen);
+}
+// ¿Estamos dentro del APK (Capacitor)? Ahí la página viene empaquetada, no del servidor
+function isApp() { try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); } catch { return false; } }
+// Dirección WebSocket: en el navegador es el mismo servidor que sirvió la página;
+// en el APK es la que el jugador escribió (192.168.1.5:3000, localhost:3000 o una liga https)
+function wsUrl() {
+  if (!isApp()) return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`;
+  const s = ($('server').value || '').trim().replace(/\/+$/, '');
+  if (!s) return null;
+  if (/^wss?:\/\//i.test(s)) return s;
+  if (/^https:\/\//i.test(s)) return s.replace(/^https:/i, 'wss:');
+  if (/^http:\/\//i.test(s)) return s.replace(/^http:/i, 'ws:');
+  return 'ws://' + s;
+}
+function connect(onOpen) {
+  const url = wsUrl();
+  if (!url) return toast('Escribe la dirección del servidor');
+  try { ws = new WebSocket(url); } catch { return toast('Esa dirección de servidor no es válida'); }
+  ws.onopen = onOpen;
+  ws.onmessage = e => handle(JSON.parse(e.data));
+  ws.onclose = () => { if (me) { toast('Se perdió la conexión con el servidor', 4000); setTimeout(() => location.reload(), 3000); } };
+  ws.onerror = () => toast('No se pudo conectar al servidor');
+}
+const send = o => ws && ws.readyState === 1 && ws.send(JSON.stringify(o));
+const getName = () => $('name').value.trim() || 'Jugador';
+
+function handle(m) {
+  switch (m.t) {
+    case 'joined': me = m.id; lan = m.lan || []; currentCode = m.code; break;
+    case 'error': toast(m.msg); if (!me && ws) ws.close(); break;
+    case 'state': onState(m); break;
+    case 'move': onMove(m); break;
+    case 'minigame':
+      runMinigame(m.game, m.seed, score => {
+        send({ t: 'mg', score });
+        $('mgFoot').innerHTML = '<span class="muted">Esperando a los demás…</span>';
+      });
+      break;
+    case 'mgResults': onMgResults(m); break;
+  }
+}
+
+function playersHtml(list, turnId, withPos) {
+  return list.map(p => `<div class="pl ${p.id === turnId ? 'turn' : ''} ${p.connected ? '' : 'off'}">
+    <span class="dot" style="background:${p.color}"></span>
+    <span class="nm">${iconHtml(p.char, 20)} ${esc(p.name)}${p.id === me ? ' (tú)' : ''}</span>
+    ${withPos ? `<span class="ps">casilla ${p.pos || 'salida'}</span>` : ''}</div>`).join('');
+}
+
+function onState(s) {
+  st = s;
+  rolling = false;
+  s.players.forEach(p => { if (!walking.has(p.id)) dispPos[p.id] = p.pos; });
+  if (s.phase === 'lobby') {
+    show('lobby');
+    $('lobCode').textContent = s.code;
+    $('lobPlayers').innerHTML = playersHtml(s.players, null, false);
+    const host = s.hostId === me;
+    $('bStart').classList.toggle('hidden', !host);
+    $('waitHost').textContent = host ? (s.players.length < 2 ? 'Puedes empezar solo para probar, pero es más divertido con amigos.' : '') : 'Esperando a que el anfitrión empiece…';
+    const box = $('lanBox');
+    if (lan.length) { box.classList.remove('hidden'); box.innerHTML = 'Tus amigos abren en su navegador:<br>' + lan.map(u => `<b>${esc(u)}</b>`).join('<br>') + `<br>y escriben el código <b>${esc(s.code)}</b>`; }
+    return;
+  }
+  show('game');
+  if (!boardBuilt) buildBoard(s.board);
+  updateTokens();
+  $('gamePlayers').innerHTML = playersHtml(s.players, s.turnId, true);
+  $('roundInfo').textContent = `Ronda ${s.round} · tras la ronda hay minijuego`;
+  const myTurn = s.phase === 'board' && s.turnId === me;
+  const cur = s.players.find(p => p.id === s.turnId);
+  const b = $('bRoll');
+  b.disabled = !myTurn;
+  b.textContent = myTurn ? '🎲 ¡Tirar dado!' : (s.phase === 'board' && cur ? `Turno de ${cur.name}…` : s.phase === 'over' ? 'Partida terminada' : 'Minijuego en curso…');
+  if (s.phase === 'board') closeMgOverlay();
+  if (s.phase === 'over') {
+    const w = s.players.find(p => p.id === s.winnerId);
+    $('winName').textContent = w ? `${charOf(w)} ${w.name} ganó!` : '¡Fin!';
+    if (!paidWin) {
+      paidWin = true;
+      const prize = s.winnerId === me ? 40 : 10;
+      addCoins(prize);
+      $('winCoins').textContent = s.winnerId === me ? `+${prize} 🪙 por ganar` : `+${prize} 🪙 por participar`;
+    }
+    $('win').classList.remove('hidden');
+  }
+}
+
+function onMove(m) {
+  const die = $('die');
+  die.classList.add('shake');
+  let n = 0;
+  const iv = setInterval(() => { die.textContent = DICE[Math.floor(Math.random() * 6)]; if (++n > 5) { clearInterval(iv); finish(); } }, 90);
+  function finish() {
+    die.classList.remove('shake'); die.textContent = DICE[m.value - 1];
+    $('log').textContent = `${m.name} sacó ${m.value}`;
+    walkTo(m.pid, m.from, m.landed, () => {
+      if (!m.kind) return;
+      setTimeout(() => {
+        $('log').textContent = m.kind === 'ladder' ? `🪜 ¡${m.name} subió por una escalera!` : `🐍 ¡${m.name} cayó por una serpiente!`;
+        slideTo(m.pid, m.to);
+      }, 350);
+    });
+  }
+}
+
+function onMgResults(m) {
+  stopMinigame();
+  const g = GAMES[m.game];
+  $('mgTitle').textContent = `${g.emoji} Resultados`;
+  $('mgDesc').textContent = g.name;
+  $('mgCount').textContent = '';
+  const medals = ['🥇', '🥈', '🥉'];
+  $('mgArea').innerHTML = m.ranking.map(r => `<div class="rank" style="width:100%"><span class="m">${medals[r.rank - 1] || '🎖️'}</span>
+    <span class="nm">${esc(r.name)}</span><span class="sc">${g.fmt(r.score)}</span>
+    <span class="bn">${r.bonus ? '+' + r.bonus : ''}</span></div>`).join('');
+  const mine = m.ranking.find(r => r.id === me);
+  const coins = mine ? ([15, 10, 7][mine.rank - 1] || 5) : 0;
+  if (coins) addCoins(coins);
+  $('mgFoot').innerHTML = (coins ? `<span class="earn" style="width:100%">+${coins} 🪙</span>` : '') +
+    '<span class="muted">Los mejores avanzan casillas extra · siguiente ronda en unos segundos…</span>';
+  $('mg').classList.remove('hidden');
+}
+
+/* ---------- Botones ---------- */
+$('bCreate').onclick = () => connect(() => send({ t: 'create', name: getName(), char: wallet.sel }));
+$('bJoin').onclick = () => {
+  const code = $('codeIn').value.trim().toUpperCase();
+  if (code.length !== 4) return toast('Escribe el código de 4 letras');
+  connect(() => send({ t: 'join', name: getName(), code, char: wallet.sel }));
+};
+$('bStart').onclick = () => send({ t: 'start' });
+$('bRoll').onclick = () => { if (!rolling && st && st.turnId === me) { rolling = true; $('bRoll').disabled = true; send({ t: 'roll' }); } };
+$('bSalon').onclick = () => { buildSalon(); show('salon'); };
+$('bBack').onclick = () => show('menu');
+$('bShop').onclick = () => { buildShop(); show('shop'); };
+$('bBackShop').onclick = () => show('menu');
+loadWallet(); renderWallet();
+let flat3d = false;
+try { flat3d = localStorage.getItem('ep_flat') === '1'; } catch {}
+function applyView() { document.body.classList.toggle('flat', flat3d); $('bView').textContent = 'Vista: ' + (flat3d ? '2D' : '3D'); }
+$('bView').onclick = () => { flat3d = !flat3d; try { localStorage.setItem('ep_flat', flat3d ? '1' : '0'); } catch {} applyView(); };
+applyView();
+$('bAgain').onclick = () => location.reload();
+try { $('name').value = localStorage.getItem('ep_name') || ''; } catch {}
+$('name').addEventListener('input', () => { try { localStorage.setItem('ep_name', $('name').value); } catch {} });
+/* ---------- App instalable (solo se ofrece con HTTPS o localhost) ---------- */
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; $('bInstall').classList.remove('hidden'); });
+$('bInstall').onclick = async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  try { await deferredInstall.userChoice; } catch {}
+  deferredInstall = null; $('bInstall').classList.add('hidden');
+};
+window.addEventListener('appinstalled', () => $('bInstall').classList.add('hidden'));
+if (isApp()) {
+  // Dentro del APK: pedir la dirección del servidor y recordarla
+  $('server').classList.remove('hidden'); $('serverHint').classList.remove('hidden');
+  try { $('server').value = localStorage.getItem('ep_server') || ''; } catch {}
+  $('server').addEventListener('input', () => { try { localStorage.setItem('ep_server', $('server').value); } catch {} });
+} else if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+const qp = new URLSearchParams(location.search).get('sala'); if (qp) $('codeIn').value = qp.slice(0, 4).toUpperCase();
+</script>
+</body>
+</html>
