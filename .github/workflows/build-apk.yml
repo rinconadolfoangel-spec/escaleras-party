@@ -4,6 +4,9 @@ name: Compilar APK
 on:
   push:
     branches: [main, master]
+    paths-ignore:
+      - 'jardin-vs-zombis/**'
+      - '.github/workflows/build-jardin.yml'
   workflow_dispatch:
 
 permissions:

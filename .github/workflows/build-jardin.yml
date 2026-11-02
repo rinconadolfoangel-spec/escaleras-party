@@ -1,0 +1,74 @@
+name: Compilar APK de Jardín vs. Zombis
+
+# Se ejecuta al subir cambios dentro de jardin-vs-zombis/, o a mano desde Actions -> Run workflow
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'jardin-vs-zombis/**'
+      - '.github/workflows/build-jardin.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write   # para publicar el APK en Releases
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Crear el proyecto Android
+        working-directory: jardin-vs-zombis
+        run: |
+          npm install
+          rm -rf www && mkdir www && cp src/index.html www/index.html
+          npx cap add android
+
+      - name: Ajustes de Android (iconos, horizontal y pantalla completa)
+        working-directory: jardin-vs-zombis
+        run: |
+          cp -r android-res/. android/app/src/main/res/
+          # Siempre en horizontal
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          grep -q screenOrientation "$MANIFEST" || sed -i 's/<activity/<activity android:screenOrientation="sensorLandscape"/' "$MANIFEST"
+          # Sin barra de estado
+          STYLES=android/app/src/main/res/values/styles.xml
+          sed -i '/name="AppTheme.NoActionBar"/a\        <item name="android:windowFullscreen">true</item>' "$STYLES"
+          npx cap sync android
+
+      - name: Compilar el APK
+        working-directory: jardin-vs-zombis/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Renombrar el APK
+        run: cp jardin-vs-zombis/android/app/build/outputs/apk/debug/app-debug.apk jardin-vs-zombis.apk
+
+      - name: Guardar el APK como descarga de esta ejecución
+        uses: actions/upload-artifact@v4
+        with:
+          name: jardin-vs-zombis-apk
+          path: jardin-vs-zombis.apk
+
+      - name: Publicar el APK en Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete jardin-apk --yes --cleanup-tag || true
+          gh release create jardin-apk jardin-vs-zombis.apk \
+            --title "Jardín vs. Zombis 2 (APK)" \
+            --notes "Instala jardin-vs-zombis.apk en tu Android (permite instalar apps de origen desconocido). Funciona sin internet."
